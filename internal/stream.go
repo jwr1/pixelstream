@@ -2,23 +2,25 @@ package internal
 
 import (
 	"fmt"
-	"net/http"
-	"os"
-	"strings"
 	"time"
 )
 
-const pixelstreamFormatIdentifier = "PXLSTRM"
-const frameSize = 256 * 3
+var Host string
 
 type PixelStream struct {
 	Version   uint8
 	FrameRate uint8
-	Frames    [][256][3]uint8
+	Frames    []Frame
 }
 
-func (ps *PixelStream) GetDuration() time.Duration {
+func (ps *PixelStream) GetTotalDuration() time.Duration {
 	return time.Duration((int64(len(ps.Frames)) * 1000 / int64(ps.FrameRate)) * int64(time.Millisecond))
+}
+
+func (ps *PixelStream) GetFrame(d time.Duration) *Frame {
+	frameNum := float64(ps.FrameRate) * d.Seconds()
+
+	return &ps.Frames[int64(frameNum)]
 }
 
 func (ps *PixelStream) Stream(host string) {
@@ -38,7 +40,7 @@ func (ps *PixelStream) Stream(host string) {
 				if currentFrame < len(ps.Frames) {
 					fmt.Println("Frame", currentFrame, "Time", t)
 
-					sendFrame(notifyUrl, ps.Frames[currentFrame])
+					ps.Frames[currentFrame].SendFrame(notifyUrl)
 
 					currentFrame++
 				} else {
@@ -51,19 +53,4 @@ func (ps *PixelStream) Stream(host string) {
 	}()
 
 	<-done
-}
-
-func sendFrame(url string, frame [256][3]uint8) {
-	colorVal := make([]string, 256)
-
-	for i, pixel := range frame {
-		colorVal[i] = fmt.Sprint((uint32(pixel[0]) << 16) | (uint32(pixel[1]) << 8) | (uint32(pixel[2]) << 0))
-	}
-
-	jsonVal := fmt.Sprintf("{\"stack\":false,\"draw\":[{\"db\":[0,0,32,8,[%s]]}]}", strings.Join(colorVal, ","))
-
-	_, e := http.Post(url, "application/json", strings.NewReader(jsonVal))
-	if e != nil {
-		fmt.Fprintln(os.Stderr, "Error:", e)
-	}
 }

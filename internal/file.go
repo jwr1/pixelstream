@@ -4,26 +4,30 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"os"
+	"io/fs"
 	"strings"
 )
 
-const currentPixelStreamFormatVersion uint8 = 1
+const pixelstreamFileExt = ".pxlstrm"
+const pixelstreamFormatIdentifier = "PXLSTRM"
+const pixelstreamFormatVersion uint8 = 1
 
-func SaveFile(output_file string, data *PixelStream) error {
-	buf := bytes.NewBuffer(make([]byte, 0, len(pixelstreamFormatIdentifier)+2+(len(data.Frames)*frameSize)))
+const frameSize = 256 * 3
+
+func (ps *PixelStream) SaveFile(fl FileLocation) error {
+	buf := bytes.NewBuffer(make([]byte, 0, len(pixelstreamFormatIdentifier)+2+(len(ps.Frames)*frameSize)))
 
 	_, err := buf.WriteString(pixelstreamFormatIdentifier)
 	if err != nil {
 		return err
 	}
 
-	_, err = buf.Write([]byte{data.Version, data.FrameRate})
+	_, err = buf.Write([]byte{ps.Version, ps.FrameRate})
 	if err != nil {
 		return err
 	}
 
-	for _, frame := range data.Frames {
+	for _, frame := range ps.Frames {
 		for _, pixel := range frame {
 			_, err = buf.Write(pixel[:])
 			if err != nil {
@@ -32,7 +36,7 @@ func SaveFile(output_file string, data *PixelStream) error {
 		}
 	}
 
-	err = os.WriteFile(output_file, buf.Bytes(), 0644)
+	err = fl.WriteFile(buf.Bytes(), 0644)
 	if err != nil {
 		return err
 	}
@@ -40,8 +44,8 @@ func SaveFile(output_file string, data *PixelStream) error {
 	return nil
 }
 
-func LoadFile(source_path string) (*PixelStream, error) {
-	file, err := os.ReadFile(source_path)
+func LoadFile(fl FileLocation) (*PixelStream, error) {
+	file, err := fs.ReadFile(fl.System, fl.Path)
 	if err != nil {
 		return nil, err
 	}
@@ -52,8 +56,8 @@ func LoadFile(source_path string) (*PixelStream, error) {
 
 	fileVersion := file[len(pixelstreamFormatIdentifier)]
 
-	if fileVersion != currentPixelStreamFormatVersion {
-		return nil, fmt.Errorf("unsupported pxlstrm format version: found %d, expected %d", fileVersion, currentPixelStreamFormatVersion)
+	if fileVersion != pixelstreamFormatVersion {
+		return nil, fmt.Errorf("unsupported pxlstrm format version: found %d, expected %d", fileVersion, pixelstreamFormatVersion)
 	}
 
 	frameCount := (len(file) - (len(pixelstreamFormatIdentifier) + 2)) / frameSize
@@ -61,7 +65,7 @@ func LoadFile(source_path string) (*PixelStream, error) {
 	output := &PixelStream{
 		Version:   fileVersion,
 		FrameRate: file[len(pixelstreamFormatIdentifier)+1],
-		Frames:    make([][256][3]uint8, 0, frameCount),
+		Frames:    make([]Frame, 0, frameCount),
 	}
 
 	for i := len(pixelstreamFormatIdentifier) + 2; i < len(file); i += frameSize {

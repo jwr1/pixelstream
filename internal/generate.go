@@ -11,7 +11,11 @@ import (
 	"golang.org/x/image/bmp"
 )
 
-func GeneratePixelStream(source_file string, frameRate uint8) (*PixelStream, error) {
+func GeneratePixelStream(sourceFile FileLocation, frameRate uint8) (*PixelStream, error) {
+	if sourceFile.System != OSFS {
+		return nil, fmt.Errorf("GeneratePixelStream source file must be from the OS FS")
+	}
+
 	dirPath, err := os.MkdirTemp("", "")
 	if err != nil {
 		return nil, err
@@ -19,7 +23,7 @@ func GeneratePixelStream(source_file string, frameRate uint8) (*PixelStream, err
 
 	defer os.RemoveAll(dirPath)
 
-	cmd := exec.Command("ffmpeg", "-i", source_file, "-filter:v", fmt.Sprintf("fps=%d,scale=32:8", frameRate), "-c:a", "copy", path.Join(dirPath, "%d.bmp"))
+	cmd := exec.Command("ffmpeg", "-i", "/"+sourceFile.Path, "-filter:v", fmt.Sprintf("fps=%d,scale=32:8", frameRate), "-c:a", "copy", path.Join(dirPath, "%d.bmp"))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
@@ -35,9 +39,9 @@ func GeneratePixelStream(source_file string, frameRate uint8) (*PixelStream, err
 	frameCount := len(dirRead)
 
 	pixelstream := &PixelStream{
-		Version:   currentPixelStreamFormatVersion,
+		Version:   pixelstreamFormatVersion,
 		FrameRate: frameRate,
-		Frames:    make([][256][3]uint8, frameCount),
+		Frames:    make([]Frame, frameCount),
 	}
 
 	for i := 0; i < frameCount; i++ {
