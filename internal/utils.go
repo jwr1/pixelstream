@@ -6,6 +6,8 @@ import (
 	"io/fs"
 	"net/url"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -44,11 +46,26 @@ func FmtDuration(d time.Duration) string {
 	return fmt.Sprintf("%02d:%02d:%02d", h, m, s)
 }
 
-var OSFS = os.DirFS("/")
+var OS_FS = os.DirFS(OS_FS_ROOT)
 
 type FileLocation struct {
 	System fs.FS
 	Path   string
+}
+
+func (fl FileLocation) ToOSPath() string {
+	if fl.System != OS_FS {
+		panic("ToOSPath() was called on a non OS FS system")
+	}
+
+	return OS_FS_ROOT + filepath.FromSlash(fl.Path)
+}
+
+func FromOSPath(path string) FileLocation {
+	return FileLocation{
+		System: OS_FS,
+		Path:   filepath.ToSlash(strings.TrimPrefix(filepath.Clean(path), OS_FS_ROOT)),
+	}
 }
 
 // ReadFile reads the named file from the file system fs and returns its contents.
@@ -69,9 +86,5 @@ func (fl FileLocation) ReadFile() ([]byte, error) {
 // Since WriteFile requires multiple system calls to complete, a failure mid-operation
 // can leave the file in a partially written state.
 func (fl FileLocation) WriteFile(data []byte, perm fs.FileMode) error {
-	if fl.System != OSFS {
-		return fmt.Errorf("WriteFile must be used with the OS FS only")
-	}
-
-	return os.WriteFile("/"+fl.Path, data, perm)
+	return os.WriteFile(fl.ToOSPath(), data, perm)
 }

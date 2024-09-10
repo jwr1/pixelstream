@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"errors"
 	"io/fs"
 	"pixelstream/charmbracelet/bubbles/filepicker"
 	"strings"
@@ -65,23 +64,13 @@ func (m OpenFileMode) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}))
 	}
 
-	if didSelect, path := m.filepicker.DidSelectDisabledFile(msg); didSelect {
-		m.err = errors.New(path + " is not valid.")
-		m.selectedFile = ""
-		return m, tea.Batch(cmd, clearErrorAfter(2*time.Second))
-	}
-
 	return m, cmd
 }
 
 func (m OpenFileMode) View() string {
 	var s strings.Builder
 	s.WriteString("\n  ")
-	if m.err != nil {
-		s.WriteString(m.filepicker.Styles.DisabledFile.Render(m.err.Error()))
-	} else {
-		s.WriteString(m.filepicker.Styles.Directory.Render(m.filepicker.CurrentDirectory))
-	}
+	s.WriteString(m.filepicker.Styles.Directory.Render(m.filepicker.CurrentDirectory))
 	s.WriteString("\n\n" + m.filepicker.View() + "\n")
 	return s.String()
 }

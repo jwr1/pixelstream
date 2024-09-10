@@ -5,7 +5,6 @@ import (
 	"io/fs"
 	"os"
 	"pixelstream/internal"
-	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -21,10 +20,11 @@ func main() {
 
 	internal.Host = host
 
-	homeDir, err := os.UserHomeDir()
+	homeDirPath, err := os.UserHomeDir()
 	if err != nil {
 		panic(err)
 	}
+	homeDirFL := internal.FromOSPath(homeDirPath)
 
 	samplesSubFS, err := fs.Sub(samplesFS, "samples")
 	if err != nil {
@@ -33,7 +33,7 @@ func main() {
 
 	menuItems := []internal.MenuItem{
 		{Label: "View Screen", Mode: internal.NewViewMode()},
-		{Label: "Play Video", Mode: internal.NewOpenFileMode(os.DirFS("/"), strings.TrimPrefix(homeDir, "/"))},
+		{Label: "Play Video", Mode: internal.NewOpenFileMode(homeDirFL.System, homeDirFL.Path)},
 		{Label: "Play Sample", Mode: internal.NewOpenFileMode(samplesSubFS, ".")},
 	}
 

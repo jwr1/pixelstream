@@ -12,7 +12,7 @@ import (
 )
 
 func GeneratePixelStream(sourceFile FileLocation, frameRate uint8) (*PixelStream, error) {
-	if sourceFile.System != OSFS {
+	if sourceFile.System != OS_FS {
 		return nil, fmt.Errorf("GeneratePixelStream source file must be from the OS FS")
 	}
 
@@ -23,7 +23,7 @@ func GeneratePixelStream(sourceFile FileLocation, frameRate uint8) (*PixelStream
 
 	defer os.RemoveAll(dirPath)
 
-	cmd := exec.Command("ffmpeg", "-i", "/"+sourceFile.Path, "-filter:v", fmt.Sprintf("fps=%d,scale=32:8", frameRate), "-c:a", "copy", path.Join(dirPath, "%d.bmp"))
+	cmd := exec.Command("ffmpeg", "-i", sourceFile.ToOSPath(), "-filter:v", fmt.Sprintf("fps=%d,scale=32:8", frameRate), "-c:a", "copy", path.Join(dirPath, "%d.bmp"))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
