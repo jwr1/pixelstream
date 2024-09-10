@@ -61,7 +61,7 @@ func GeneratePixelStream(sourceFile FileLocation, frameRate uint8) (*PixelStream
 		rgba := image.NewRGBA(rect)
 		draw.Draw(rgba, rect, img, rect.Min, draw.Src)
 
-		var frame [256][3]uint8
+		var frame Frame
 
 		for j := 0; j < len(rgba.Pix); j += 4 {
 			frame[j/4] = [3]uint8{rgba.Pix[j], rgba.Pix[j+1], rgba.Pix[j+2]}

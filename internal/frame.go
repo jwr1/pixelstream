@@ -11,10 +11,14 @@ import (
 	"github.com/muesli/termenv"
 )
 
-type Frame [256][3]uint8
+const frameWidth = 32
+const frameHeight = 8
+const frameArea = frameWidth * frameHeight
+
+type Frame [frameArea][3]uint8
 
 func (f *Frame) SendFrame(url string) error {
-	colorVal := make([]string, 256)
+	colorVal := make([]string, frameArea)
 
 	for i, pixel := range f {
 		colorVal[i] = fmt.Sprint((uint32(pixel[0]) << 16) | (uint32(pixel[1]) << 8) | (uint32(pixel[2]) << 0))
@@ -56,11 +60,11 @@ func (f *Frame) ReceiveFrame(url string) error {
 func (f *Frame) View() string {
 	var s strings.Builder
 
-	for i := 0; i < 8; i++ {
-		for j := 0; j < 32; j++ {
+	for i := 0; i < frameHeight; i++ {
+		for j := 0; j < frameWidth; j++ {
 			s.WriteString(termenv.
 				String("██").
-				Foreground(termenv.ColorProfile().FromColor(color.RGBA{f[i*32+j][0], f[i*32+j][1], f[i*32+j][2], 255})).
+				Foreground(termenv.ColorProfile().FromColor(color.RGBA{f[i*frameWidth+j][0], f[i*frameWidth+j][1], f[i*frameWidth+j][2], 255})).
 				String(),
 			)
 		}

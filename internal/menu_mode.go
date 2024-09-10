@@ -58,13 +58,15 @@ func NewMenuMode() MenuMode {
 		listItems[i] = v
 	}
 
-	l := list.New(listItems, itemDelegate{}, 80, 10)
-	l.Title = "Select Mode"
+	l := list.New(listItems, itemDelegate{}, 80, 7)
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)
+	l.SetShowTitle(false)
 	l.Styles.Title = titleStyle
 	l.Styles.PaginationStyle = paginationStyle
 	l.Styles.HelpStyle = listHelpStyle
+
+	l.KeyMap.ShowFullHelp.SetEnabled(false)
 
 	return MenuMode{
 		list: l,
@@ -101,5 +103,14 @@ func (m MenuMode) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m MenuMode) View() string {
-	return "\n" + m.list.View()
+	var s strings.Builder
+
+	s.WriteString("pixelstream - Stream videos to your awtrix clock with ease.\n")
+	s.WriteString("Host: ")
+	s.WriteString(Host)
+	s.WriteString("\n\n")
+
+	s.WriteString(m.list.View())
+
+	return s.String()
 }

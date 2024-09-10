@@ -12,7 +12,7 @@ const pixelstreamFileExt = ".pxlstrm"
 const pixelstreamFormatIdentifier = "PXLSTRM"
 const pixelstreamFormatVersion uint8 = 1
 
-const frameSize = 256 * 3
+const frameSize = frameArea * 3
 
 func (ps *PixelStream) SaveFile(fl FileLocation) error {
 	buf := bytes.NewBuffer(make([]byte, 0, len(pixelstreamFormatIdentifier)+2+(len(ps.Frames)*frameSize)))
@@ -69,7 +69,7 @@ func LoadFile(fl FileLocation) (*PixelStream, error) {
 	}
 
 	for i := len(pixelstreamFormatIdentifier) + 2; i < len(file); i += frameSize {
-		var frame [256][3]uint8
+		var frame Frame
 
 		for j := 0; j < frameSize; j += 3 {
 			frame[j/3] = [3]uint8{file[i+j], file[i+j+1], file[i+j+2]}
