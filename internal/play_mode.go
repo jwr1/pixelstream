@@ -35,7 +35,7 @@ type PlayMode struct {
 	keymap        PlayModeKeymap
 	help          help.Model
 	progress      progress.Model
-	sendFrameLock CmdLock
+	sendFrameLock *CmdLock
 }
 
 type PlayModeKeymap struct {
@@ -87,7 +87,7 @@ func NewPlayMode(file FileLocation) PlayMode {
 		},
 		help:          help.New(),
 		progress:      progress.New(progress.WithoutPercentage(), progress.WithWidth(46), progress.WithScaledGradient("#FF7CCB", "#FDFF8C")),
-		sendFrameLock: NewCmdLock(),
+		sendFrameLock: &CmdLock{},
 	}
 
 	m.keymap.start.SetEnabled(false)

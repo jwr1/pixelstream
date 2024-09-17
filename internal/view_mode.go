@@ -9,13 +9,13 @@ import (
 
 type ViewMode struct {
 	currentFrame  *Frame
-	appSwitchLock CmdLock
+	appSwitchLock *CmdLock
 }
 
 func NewViewMode() ViewMode {
 	return ViewMode{
 		currentFrame:  &Frame{},
-		appSwitchLock: NewCmdLock(),
+		appSwitchLock: &CmdLock{},
 	}
 }
 

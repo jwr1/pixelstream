@@ -8,16 +8,10 @@ import (
 
 // Ensure a tea.Cmd can only run once at a time
 type CmdLock struct {
-	mutex *sync.Mutex
+	mutex sync.Mutex
 }
 
-func NewCmdLock() CmdLock {
-	return CmdLock{
-		mutex: &sync.Mutex{},
-	}
-}
-
-func (m CmdLock) Lock(cmd tea.Cmd) tea.Cmd {
+func (m *CmdLock) Lock(cmd tea.Cmd) tea.Cmd {
 	return func() tea.Msg {
 		m.mutex.Lock()
 		msg := cmd()
@@ -26,7 +20,7 @@ func (m CmdLock) Lock(cmd tea.Cmd) tea.Cmd {
 	}
 }
 
-func (m CmdLock) TryLock(cmd tea.Cmd) tea.Cmd {
+func (m *CmdLock) TryLock(cmd tea.Cmd) tea.Cmd {
 	return func() tea.Msg {
 		if m.mutex.TryLock() {
 			msg := cmd()
