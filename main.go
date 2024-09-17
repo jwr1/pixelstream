@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"fmt"
 	"io/fs"
 	"os"
 	"pixelstream/internal"
@@ -13,6 +14,13 @@ import (
 var samplesFS embed.FS
 
 func main() {
+	if len(os.Args) < 2 {
+		fmt.Println("Error: host expected but not given. Use the following format:")
+		fmt.Println("\tpixelstream <host>")
+		fmt.Println("\tpixelstream http://192.168.1.170")
+		os.Exit(1)
+	}
+
 	host, err := internal.GetUrlHost(os.Args[1])
 	if err != nil {
 		panic(err)
